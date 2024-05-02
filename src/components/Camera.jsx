@@ -1,21 +1,28 @@
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState, useCallback, useEffect } from "react";
 import Webcam from "react-webcam";
+import { MdDownloadForOffline } from "react-icons/md";
+import { downloadImage } from "../utils/downloadimage";
+import CropImage from "./subcomponent/CropImage";
 
-const videoConstraints = {
-  width: 380,
-  facingMode: "environment"
-};
 
 const Camera = () => {
   const [openCamera, setOpenCamera] = useState(false);
   const [selectedCamera, setSelectedCamera] = useState("environment"); // Default to back camera
   const webcamRef = useRef(null);
   const [url, setUrl] = useState(null);
+  const [croped, setCroped] = useState(false);
+
+  const videoConstraints = {
+    height: 1280,
+    width: 720,
+    facingMode: selectedCamera // Default to back camera
+  };
 
   const capturePhoto = useCallback(async () => {
     const imageSrc = webcamRef.current.getScreenshot();
-    setUrl(imageSrc);
+    setUrl(imageSrc); // Set the captured image URL
   }, [webcamRef]);
+
 
   return (
     <>
@@ -57,7 +64,7 @@ const Camera = () => {
               audio={true}
               screenshotFormat="image/jpeg"
               videoConstraints={videoConstraints}
-              style={{ height: "380px", width: "380px" }}
+              style={{ height: "380px", width: "380px", margin: "10px 0" }}
             />
             <div style={{ display: "flex", gap: "20px", marginBottom: "20px" }}>
               <button onClick={capturePhoto}>Capture</button>
@@ -66,14 +73,21 @@ const Camera = () => {
           </div>
         )}
       </div>
-      {url && (
-        <div>
+      {(url && !croped) && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "10px" }}>
           <img
-            style={{ height: "200px", width: "200px", marginTop: "10px" }}
+            style={{ height: "300px", width: "300px", marginTop: "10px" }}
             src={url}
-            alt="Screenshot"
+            alt="Captured Photo"
           />
+          <button onClick={() => setCroped(true)}>Crop Image</button>
+          <button style={{ border: "none", borderRadius: "10px", backgroundColor: "#00b8ff" }} onClick={() => downloadImage(url)}>
+            <MdDownloadForOffline style={{ width: "40px", height: "40px" }} />
+          </button>
         </div>
+      )}
+      {(url && croped) && (
+        <CropImage imageDataUrl={url} setCroped={setCroped}/>
       )}
     </>
   );
